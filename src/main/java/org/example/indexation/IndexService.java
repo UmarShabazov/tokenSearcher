@@ -1,6 +1,7 @@
-package org.example;
+package org.example.indexation;
 
 import org.example.tokenization.Tokenizer;
+import org.example.util.FileCheckerUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -9,14 +10,16 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class IndexService {
+
+public class IndexService implements Indexable {
 
     private static final Logger logger = Logger.getLogger(IndexService.class.getName());
     private final Tokenizer tokenizer;
-    private final Map<String, Set<File>> index = new HashMap<>();
+    private final Indexer indexer;
 
-    public IndexService(Tokenizer tokenizer) {
+    public IndexService(Tokenizer tokenizer, Indexer indexer) {
         this.tokenizer = tokenizer;
+        this.indexer = indexer;
     }
 
     public void addPath(String path) throws IOException {
@@ -31,20 +34,20 @@ public class IndexService {
     }
 
     private void addFile(File file) throws IOException {
-        if (file.isFile() && file.getName().endsWith(".txt")) {
+        if (file.isFile() && FileCheckerUtil.isTextFile(file)) {
             String content = Files.readString(file.toPath());
             String[] tokens = tokenizer.tokenize(content);
 
             if (tokens.length == 0) {
-                logger.log(Level.WARNING, "Файл пуст или не содержит токенов: {0}", file.getName());
+                logger.log(Level.WARNING, "File is empty or contains no tokens: {0}", file.getName());
                 return;
             }
 
-            logger.log(Level.INFO, "Индексируем файл: {0}", file.getName());
+            logger.log(Level.INFO, "Indexing file: {0}", file.getName());
 
             for (String token : tokens) {
-                index.computeIfAbsent(token, k -> new HashSet<>()).add(file);
-                logger.log(Level.FINE, "Добавлен токен: {0} для файла: {1}", new Object[]{token, file.getName()});
+                indexer.addToken(token, file);
+                logger.log(Level.FINE, "Token added: {0} for file: {1}", new Object[]{token, file.getName()});
             }
         }
     }
@@ -53,13 +56,11 @@ public class IndexService {
         Set<File> results = new HashSet<>();
         String[] queryTokens = tokenizer.tokenize(query);
 
-        logger.log(Level.INFO, "Поиск по запросу: {0}", query);
-
         for (String token : queryTokens) {
-            Set<File> filesContainingToken = index.getOrDefault(token, Collections.emptySet());
+            Set<File> filesContainingToken = indexer.getFilesForToken(token);
 
             if (filesContainingToken.isEmpty()) {
-                logger.log(Level.INFO, "Токен \"{0}\" отсутствует в индексе. Возвращаем пустое множество.", token);
+                logger.log(Level.INFO, "Token \"{0}\" not found in index. Returning empty set.", token);
                 return Collections.emptySet();
             }
 
@@ -69,16 +70,10 @@ public class IndexService {
                 results.retainAll(filesContainingToken);
             }
         }
-
-        logger.log(Level.INFO, "Найдено {0} файлов по запросу \"{1}\"", new Object[]{results.size(), query});
         return results;
     }
 
     public void printIndex() {
-        index.forEach((token, files) -> {
-            System.out.println("Токен: " + token + " встречается в файлах: ");
-            files.forEach(file -> System.out.println("  - " + file.getAbsolutePath()));
-        });
+        indexer.printIndex();
     }
-
 }
