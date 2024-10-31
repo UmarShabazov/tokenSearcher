@@ -1,27 +1,47 @@
 # tokenSearch
-# Система индексирования и поиска по текстовым файлам
+# Text File Indexing and Search System
 
-Этот проект предоставляет консольное приложение для индексирования текстовых файлов и поиска по ключевым словам. Система поддерживает разные алгоритмы токенизации, что позволяет легко адаптировать её для различных языков и типов данных.
+This project is a console application for indexing text files and performing keyword searches. Its flexible architecture allows it to be easily adapted for various requirements and tokenization methods.
 
-## Описание
+## Overview
 
-Программа позволяет:
-- Индексировать текстовые файлы, находящиеся в заданных директориях.
-- Выполнять поиск файлов, содержащих указанные пользователем слова или фразы.
+The application allows users to:
 
-Проект использует консольный интерфейс для взаимодействия с пользователем и реализован на языке Java.
+- Index text files located in specified directories.
+- Search for files containing specified words or phrases.
+- Support multiple user interaction modes (command line or console interface).
 
-## Основные компоненты
+## Key Components
 
-### 1. `IndexService`
-- Отвечает за индексацию файлов и хранение токенов.
-- Реализует методы для добавления файлов или директорий в индекс и поиска по запросу.
-- Поддерживает хранение данных в формате `Map<String, Set<File>>`, где каждый ключ (токен) связан с множеством файлов, содержащих этот токен.
+### 1. `ApplicationMode`
+The ApplicationMode interface defines different modes of application operation:
 
-### 2. `Tokenizer`
-- Интерфейс, который можно расширять для реализации различных методов токенизации.
-- Проект включает реализацию `WordByWordTokenizer` и `TrigramTokenizer`, использующие Unicode для разделения текста на слова или триграммы соответственно.
+- CommandLineService — a command-line implementation that allows file paths and search queries to be passed as arguments.
+- ConsoleService — an interactive console implementation that enables the user to manually enter commands.
 
-### 3. `ConsoleService`
-- Обеспечивает интерфейс командной строки для пользователя.
-- Поддерживает команды для добавления файлов/директорий и выполнения поиска по запросу.
+### 2. `Indexable (Index Management Interface)`
+The Indexable interface manages core indexing and search operations:
+
+- addPath(String path) — adds the specified path (file or directory) to the index.
+- search(String query) — performs a keyword search.
+- printIndex() — outputs the current index state.
+
+Implementation: IndexService — an implementation of Indexable that processes tokens and files, using Indexer for index storage.
+
+### 3. `Indexer (Index Storage Interface)`
+Indexer is responsible for internal index storage and manages the association between tokens and files:
+
+-addToken(String token, File file) — associates a file with a specified token.
+-getFilesForToken(String token) — retrieves files associated with a particular token.
+-printIndex() — outputs the current index.
+
+Implementation: InMemoryIndexer — stores the index in memory using a Map<String, Set<File>> structure. Supports adding tokens and outputting the current index state.
+
+### 4. `Tokenizer (Tokenization Interface)`
+The Tokenizer interface defines methods for tokenizing file text. Supporting different tokenization methods allows the system to adapt to various data formats:
+
+- tokenize(String content) — splits text into tokens.
+
+Implementations:
+- WordByWordTokenizer — splits text into individual words, using regular expressions to handle word boundaries.
+- TrigramTokenizer — splits text into trigrams (groups of three characters), allowing for more precise substring searches.
