@@ -14,13 +14,13 @@ The application allows users to:
 ## Key Components
 
 ### 1. `ApplicationMode`
-The ApplicationMode interface defines different modes of application operation:
+The `ApplicationMode` interface defines different modes of application operation:
 
 - CommandLineService — a command-line implementation that allows file paths and search queries to be passed as arguments.
 - ConsoleService — an interactive console implementation that enables the user to manually enter commands.
 
-### 2. `Indexable (Index Management Interface)`
-The Indexable interface manages core indexing and search operations:
+### 2. `Search Engine Interface (SearchEngine)`
+The `SearchEngine` interface manages core indexing and search operations:
 
 - addPath(String path) — adds the specified path (file or directory) to the index.
 - search(String query) — performs a keyword search.
@@ -28,8 +28,8 @@ The Indexable interface manages core indexing and search operations:
 
 Implementation: IndexService — an implementation of Indexable that processes tokens and files, using Indexer for index storage.
 
-### 3. `Indexer (Index Storage Interface)`
-Indexer is responsible for internal index storage and manages the association between tokens and files:
+### 3. `Token Indexer Interface (TokenIndexer)`
+`TokenIndexer` interface is responsible for managing the internal index structure and associating tokens with files:
 
 -addToken(String token, File file) — associates a file with a specified token.
 -getFilesForToken(String token) — retrieves files associated with a particular token.
@@ -38,10 +38,13 @@ Indexer is responsible for internal index storage and manages the association be
 Implementation: InMemoryIndexer — stores the index in memory using a Map<String, Set<File>> structure. Supports adding tokens and outputting the current index state.
 
 ### 4. `Tokenizer (Tokenization Interface)`
-The Tokenizer interface defines methods for tokenizing file text. Supporting different tokenization methods allows the system to adapt to various data formats:
+The `Tokenizer` interface defines methods for tokenizing file text. Supporting different tokenization methods allows the system to adapt to various data formats:
 
 - tokenize(String content) — splits text into tokens.
 
 Implementations:
 - WordByWordTokenizer — splits text into individual words, using regular expressions to handle word boundaries.
 - TrigramTokenizer — splits text into trigrams (groups of three characters), allowing for more precise substring searches.
+
+### 5. `FileChecker Utility`
+The `FileCheckerUtil` class is responsible for verifying if a file is a valid text file before indexing. It ensures the file has an appropriate extension and valid UTF-8 encoding, filtering out binary files and unsupported formats. 
